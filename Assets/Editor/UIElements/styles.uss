@@ -1,0 +1,85 @@
+.vector3 {
+  margin: 0;
+  width: 250px;
+  height: auto;
+  border-color: rgba(0, 0, 0, 0.35);
+  border-width: 3px;
+  border-radius: 9px;
+}
+
+.vector3 > .tab-bar,
+.vector3 > .range > .input-fields {
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.vector3 > .tab-bar > .tab,
+.vector3 > .range > .input-fields > * {
+  width: 33%;
+}
+
+.vector3 > .tab-bar > .tab > .unity-button,
+.vector3 > .range > .input-fields > .unity-integer-field,
+.vector3 > .range > .input-fields > .unity-integer-field > .unity-integer-field__input {
+  padding-left: 0;
+  padding-right: 0;
+  margin-left: 0;
+  margin-right: 0;
+  border-width: 0;
+  border-radius: 0;
+}
+
+.vector3 > .tab-bar > .tab.active,
+.vector3 > .tab-bar > .tab.active > .unity-button,
+.vector3 > .range > .input-fields > .unity-integer-field {
+  background-color: transparent;
+}
+
+.vector3 > .tab-bar > .tab {
+  background-color: #666;
+}
+
+.vector3 > .tab-bar > .tab.left-rounded {
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+}
+
+.vector3 > .tab-bar > .tab.right-rounded {
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+
+.vector3 > .unity-label {
+  font-size: 20px;
+  width: auto;
+  padding-left: 0;
+  padding-right: 0;
+  align-self: center;
+}
+
+.vector3 > .range {
+  display: none;
+}
+
+.vector3 > .range.active {
+  display: flex;
+}
+
+.vector3 > .range > .unity-base-slider.unity-base-slider--horizontal > .unity-base-slider__input {
+  height: 19px;
+}
+
+.vector3 > .range > .input-fields > .min-value {
+  border-bottom-left-radius: 5px;
+}
+
+.vector3 > .range > .input-fields > .max-value {
+  border-bottom-right-radius: 5px;
+}
+
+.vector3 > .range > .input-fields > .min-value > .unity-integer-field__input,
+.vector3 > .range > .input-fields > .current-value > .unity-integer-field__input,
+.vector3 > .range > .input-fields > .max-value > .unity-integer-field__input {
+  -unity-text-align: middle-center;
+}
