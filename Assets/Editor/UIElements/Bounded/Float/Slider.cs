@@ -5,23 +5,19 @@ using SliderFloat = UnityEngine.UIElements.Slider;
 
 namespace MayB.Games.UI.Elements.Bounded.Float {
   public class Slider : VisualElement {
-    private const string UssClass = "bounded-int range";
+    
+    public float Value;
 
-    private Label Display;
     private SliderFloat Range;
-    private FloatField Min, Max;
+    private FloatField Min, Current, Max;
+    private EventCallback<float> Callback;
 
-    private EventCallback<ChangeEvent<float>> Callback;
-
-    private float Value;
-
-    public Slider(float val, float min, float max, EventCallback<ChangeEvent<float>> cb) {
+    public Slider(float val, float min, float max, EventCallback<float> cb) {
       Callback = cb;
       Value    = val;
 
-      contentContainer.AddToClassList(UssClass);
-
-      Display = new Label { text = val.ToString() };
+      contentContainer.AddToClassList("bounded-float");
+      contentContainer.AddToClassList("range");
 
       Range = new SliderFloat {
         highValue = max,
@@ -29,25 +25,38 @@ namespace MayB.Games.UI.Elements.Bounded.Float {
         value     = val
       };
 
-      Min = new FloatField { value = min };
-      Max = new FloatField { value = max };
+      Min     = new FloatField { value = min };
+      Current = new FloatField { value = val };
+      Max     = new FloatField { value = max };
 
-      Range.RegisterValueChangedCallback(DisplayChanged);
-      Min.RegisterValueChangedCallback(MinChanged);
-      Max.RegisterValueChangedCallback(MaxChanged);
-      
-      contentContainer.Add(Display);
+      Min.AddToClassList("min-value");
+      Current.AddToClassList("current-value");
+      Max.AddToClassList("max-value");
+
+      var Fields = new VisualElement();
+
+      Fields.AddToClassList("input-fields");
+
+      Fields.Add(Min);
+      Fields.Add(Current);
+      Fields.Add(Max);
+
       contentContainer.Add(Range);
-      contentContainer.Add(Min);
-      contentContainer.Add(Max);
+      contentContainer.Add(Fields);
+
+      Range.RegisterValueChangedCallback(CurrentChanged);
+      Min.RegisterValueChangedCallback(MinChanged);
+      Current.RegisterValueChangedCallback(CurrentChanged);
+      Max.RegisterValueChangedCallback(MaxChanged);
     }
 
-    private void DisplayChanged(ChangeEvent<float> evt) {
+    private void CurrentChanged(ChangeEvent<float> evt) {
       Value = evt.newValue;
 
-      Display.text = Value.ToString();
+      Current.value = Value;
+      Range.value   = Value;
 
-      Callback(evt);
+      Callback(Value);
     }
 
     private void MinChanged(ChangeEvent<float> evt) => Range.lowValue = evt.newValue;

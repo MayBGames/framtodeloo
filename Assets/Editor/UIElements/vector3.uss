@@ -1,6 +1,7 @@
 .vector3 {
-  margin: 0;
-  width: 250px;
+  margin: 5;
+  width: 250;
+  min-width: 250;
   height: auto;
   border-color: rgba(0, 0, 0, 0.35);
   border-width: 3px;
@@ -21,7 +22,9 @@
 
 .vector3 > .tab-bar > .tab > .unity-button,
 .vector3 > .range > .input-fields > .unity-integer-field,
-.vector3 > .range > .input-fields > .unity-integer-field > .unity-integer-field__input {
+.vector3 > .range > .input-fields > .unity-float-field,
+.vector3 > .range > .input-fields > .unity-integer-field > .unity-integer-field__input,
+.vector3 > .range > .input-fields > .unity-float-field   > .unity-float-field__input {
   padding-left: 0;
   padding-right: 0;
   margin-left: 0;
@@ -32,7 +35,8 @@
 
 .vector3 > .tab-bar > .tab.active,
 .vector3 > .tab-bar > .tab.active > .unity-button,
-.vector3 > .range > .input-fields > .unity-integer-field {
+.vector3 > .range > .input-fields > .unity-integer-field,
+.vector3 > .range > .input-fields > .unity-float-field {
   background-color: transparent;
 }
 
@@ -79,7 +83,10 @@
 }
 
 .vector3 > .range > .input-fields > .min-value > .unity-integer-field__input,
+.vector3 > .range > .input-fields > .min-value > .unity-float-field__input,
 .vector3 > .range > .input-fields > .current-value > .unity-integer-field__input,
-.vector3 > .range > .input-fields > .max-value > .unity-integer-field__input {
+.vector3 > .range > .input-fields > .current-value > .unity-float-field__input,
+.vector3 > .range > .input-fields > .max-value > .unity-integer-field__input,
+.vector3 > .range > .input-fields > .max-value > .unity-float-field__input {
   -unity-text-align: middle-center;
 }
