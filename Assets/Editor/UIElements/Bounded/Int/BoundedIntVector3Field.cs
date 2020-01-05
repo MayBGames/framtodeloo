@@ -1,22 +1,25 @@
-using System;
-
 using UnityEngine;
 
 using UnityEngine.UIElements;
 
 namespace MayB.Games.UI.Elements.Bounded.Int {
   public class VectorThree : VisualElement {
-    private Vector3 Source;
+    private Sparse3DVolume Source;
     private Label Property;
     private string[] Labels = new string[3];
     private Slider[] Sliders = new Slider[3];
     private VisualElement[] Buttons = new VisualElement[3];
 
-    public VectorThree(string prop, string[] labels, int min, int max, Vector3 src) {
+    public VectorThree(
+      string prop,
+      string[] labels,
+      int min,
+      int max,
+      Vector3 src,
+      EventCallback<Vector3> cb
+    ) {
       string property               = prop.ToLower().Trim();
       string PropertFieldDescriptor = $"{property}-bounded-int-vector3";
-
-      Source = src;
 
       contentContainer.name = PropertFieldDescriptor;
 
@@ -34,10 +37,18 @@ namespace MayB.Games.UI.Elements.Bounded.Int {
 
         Labels[v] = labels[v];
 
-        Sliders[v] = new Slider(Source[v], min, max, delegate(int val) {
+        Sliders[v] = new Slider(src[v], min, max, delegate(int val) {
           ((Button) Buttons[v].ElementAt(0)).text = FormatButtonText(v);
-      
-          Source[v] = val;
+
+          Vector3 updated = new Vector3();
+
+          updated.x = v == 0 ? val : src.x;
+          updated.y = v == 1 ? val : src.y;
+          updated.z = v == 2 ? val : src.z;
+
+          cb(updated);
+
+          src = updated;
         });
 
         Buttons[v] = new VisualElement();

@@ -4,19 +4,24 @@ using UnityEngine.UIElements;
 
 namespace MayB.Games.UI.Elements.Bounded.Float {
   public class VectorThree : VisualElement {
-    private Vector3 Source;
-
     private Label Property;
 
     private string[] Labels = new string[3];
     private Slider[] Sliders = new Slider[3];
     private VisualElement[] Buttons = new VisualElement[3];
 
-    public VectorThree(string prop, string[] labels, float min, float max, Vector3 src) {
+    public VectorThree(
+      string prop,
+      string[] labels,
+      float min,
+      float max,
+      Vector3 src,
+      EventCallback<Vector3> valueCB,
+      EventCallback<float>   minCB,
+      EventCallback<float>   maxCB
+    ) {
       string property               = prop.ToLower().Trim();
       string PropertFieldDescriptor = $"{property}-bounded-float-vector3";
-
-      Source = src;
 
       contentContainer.name = PropertFieldDescriptor;
 
@@ -34,11 +39,19 @@ namespace MayB.Games.UI.Elements.Bounded.Float {
 
         Labels[v] = labels[v];
 
-        Sliders[v] = new Slider(Source[v], min, max, delegate(float val) {
+        Sliders[v] = new Slider(src[v], min, max, delegate(float val) {
           ((Button) Buttons[v].ElementAt(0)).text = FormatButtonText(v);
+
+          Vector3 updated = new Vector3();
+
+          updated.x = v == 0 ? val : src.x;
+          updated.y = v == 1 ? val : src.y;
+          updated.z = v == 2 ? val : src.z;
       
-          Source[v] = val;
-        });
+          valueCB(updated);
+
+          src = updated;
+        }, minCB, maxCB);
 
         Buttons[v] = new VisualElement();
         Buttons[v].Add(new Button {

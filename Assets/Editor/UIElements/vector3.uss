@@ -1,4 +1,5 @@
-.vector3 {
+.vector3,
+.value {
   margin: 5;
   width: 250;
   min-width: 250;
@@ -9,14 +10,18 @@
 }
 
 .vector3 > .tab-bar,
-.vector3 > .range > .input-fields {
+.vector3 > .range > .input-fields,
+.value > .tab-bar,
+.value > .range > .input-fields, {
   flex-direction: row;
   justify-content: center;
   align-items: center;
 }
 
 .vector3 > .tab-bar > .tab,
-.vector3 > .range > .input-fields > * {
+.vector3 > .range > .input-fields > *,
+.value > .tab-bar > .tab,
+.value > .range > .input-fields > * {
   width: 33%;
 }
 
@@ -24,7 +29,12 @@
 .vector3 > .range > .input-fields > .unity-integer-field,
 .vector3 > .range > .input-fields > .unity-float-field,
 .vector3 > .range > .input-fields > .unity-integer-field > .unity-integer-field__input,
-.vector3 > .range > .input-fields > .unity-float-field   > .unity-float-field__input {
+.vector3 > .range > .input-fields > .unity-float-field   > .unity-float-field__input,
+.value > .tab-bar > .tab > .unity-button,
+.value > .range > .input-fields > .unity-integer-field,
+.value > .range > .input-fields > .unity-float-field,
+.value > .range > .input-fields > .unity-integer-field > .unity-integer-field__input,
+.value > .range > .input-fields > .unity-float-field   > .unity-float-field__input {
   padding-left: 0;
   padding-right: 0;
   margin-left: 0;
@@ -36,25 +46,33 @@
 .vector3 > .tab-bar > .tab.active,
 .vector3 > .tab-bar > .tab.active > .unity-button,
 .vector3 > .range > .input-fields > .unity-integer-field,
-.vector3 > .range > .input-fields > .unity-float-field {
+.vector3 > .range > .input-fields > .unity-float-field,
+.value > .tab-bar > .tab.active,
+.value > .tab-bar > .tab.active > .unity-button,
+.value > .range > .input-fields > .unity-integer-field,
+.value > .range > .input-fields > .unity-float-field {
   background-color: transparent;
 }
 
-.vector3 > .tab-bar > .tab {
+.vector3 > .tab-bar > .tab,
+.value > .tab-bar > .tab {
   background-color: #666;
 }
 
-.vector3 > .tab-bar > .tab.left-rounded {
+.vector3 > .tab-bar > .tab.left-rounded,
+.value > .tab-bar > .tab.left-rounded {
   border-top-left-radius: 3px;
   border-bottom-left-radius: 3px;
 }
 
-.vector3 > .tab-bar > .tab.right-rounded {
+.vector3 > .tab-bar > .tab.right-rounded,
+.value > .tab-bar > .tab.right-rounded {
   border-top-right-radius: 3px;
   border-bottom-right-radius: 3px;
 }
 
-.vector3 > .unity-label {
+.vector3 > .unity-label,
+.value > .unity-label {
   font-size: 20px;
   width: auto;
   padding-left: 0;
@@ -66,19 +84,23 @@
   display: none;
 }
 
-.vector3 > .range.active {
+.vector3 > .range.active,
+.value > .range {
   display: flex;
 }
 
-.vector3 > .range > .unity-base-slider.unity-base-slider--horizontal > .unity-base-slider__input {
+.vector3 > .range > .unity-base-slider.unity-base-slider--horizontal > .unity-base-slider__input,
+.value > .range > .unity-base-slider.unity-base-slider--horizontal > .unity-base-slider__input {
   height: 19px;
 }
 
-.vector3 > .range > .input-fields > .min-value {
+.vector3 > .range > .input-fields > .min-value,
+.value > .range > .input-fields > .min-value {
   border-bottom-left-radius: 5px;
 }
 
-.vector3 > .range > .input-fields > .max-value {
+.vector3 > .range > .input-fields > .max-value,
+.value > .range > .input-fields > .max-value {
   border-bottom-right-radius: 5px;
 }
 
@@ -87,6 +109,12 @@
 .vector3 > .range > .input-fields > .current-value > .unity-integer-field__input,
 .vector3 > .range > .input-fields > .current-value > .unity-float-field__input,
 .vector3 > .range > .input-fields > .max-value > .unity-integer-field__input,
-.vector3 > .range > .input-fields > .max-value > .unity-float-field__input {
+.vector3 > .range > .input-fields > .max-value > .unity-float-field__input,
+.value > .range > .input-fields > .min-value > .unity-integer-field__input,
+.value > .range > .input-fields > .min-value > .unity-float-field__input,
+.value > .range > .input-fields > .current-value > .unity-integer-field__input,
+.value > .range > .input-fields > .current-value > .unity-float-field__input,
+.value > .range > .input-fields > .max-value > .unity-integer-field__input,
+.value > .range > .input-fields > .max-value > .unity-float-field__input {
   -unity-text-align: middle-center;
 }

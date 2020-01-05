@@ -10,11 +10,23 @@ namespace MayB.Games.UI.Elements.Bounded.Float {
 
     private SliderFloat Range;
     private FloatField Min, Current, Max;
-    private EventCallback<float> Callback;
+    private EventCallback<float> ValueCallback;
+    private EventCallback<float> MinCallback;
+    private EventCallback<float> MaxCallback;
 
-    public Slider(float val, float min, float max, EventCallback<float> cb) {
-      Callback = cb;
-      Value    = val;
+    public Slider(
+      float val,
+      float min,
+      float max,
+      EventCallback<float> valueCB,
+      EventCallback<float> minCB,
+      EventCallback<float> maxCB
+    ) {
+      ValueCallback = valueCB;
+      MinCallback   = minCB;
+      MaxCallback   = maxCB;
+      
+      Value = val;
 
       contentContainer.AddToClassList("bounded-float");
       contentContainer.AddToClassList("range");
@@ -56,11 +68,19 @@ namespace MayB.Games.UI.Elements.Bounded.Float {
       Current.value = Value;
       Range.value   = Value;
 
-      Callback(Value);
+      ValueCallback(Value);
     }
 
-    private void MinChanged(ChangeEvent<float> evt) => Range.lowValue = evt.newValue;
+    private void MinChanged(ChangeEvent<float> evt) {
+      Range.lowValue = evt.newValue;
 
-    private void MaxChanged(ChangeEvent<float> evt) => Range.highValue = evt.newValue;
+      MinCallback(Range.lowValue);
+    }
+
+    private void MaxChanged(ChangeEvent<float> evt) {
+      Range.highValue = evt.newValue;
+
+      MaxCallback(Range.highValue);
+    }
   }
 }
