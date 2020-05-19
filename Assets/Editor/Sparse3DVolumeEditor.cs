@@ -35,16 +35,34 @@ public class Sparse3DVolumeEditor : Editor {
     AddFrequency();
     AddMin();    
 
-    var RenderButton = new Button(delegate () {
-      MB.GetComponent<MeshFilter>().sharedMesh = MB.Volume.SparseBuildMesh();
-    });
+    // var RenderButton = new Button(delegate () {
+    //   MB.GetComponent<MeshFilter>().sharedMesh = MB.Volume.SparseBuildMesh();
+    // });
 
-    RenderButton.text = "Render";
+    // RenderButton.text = "Render";
 
-    RootElement.Add(RenderButton);
+    // RootElement.Add(RenderButton);
 
     return RootElement;
   }
+
+  private void AddChunks() {
+    EventCallback<Vector3> chunksValueCallback = delegate(Vector3 updated) { MB.Volume.Chunks   = updated; };
+    EventCallback<float>   chunksMinCallback   = delegate(float   updated) { MB.ChunksRange.Min = updated; };
+    EventCallback<float>   chunksMaxCallback   = delegate(float   updated) { MB.ChunksRange.Max = updated; };
+
+    RootElement.Add(new VectorThreeFloatField(
+      "Chunks",
+      new string[] { "Width", "Height", "Depth" },
+      MB.ChunksRange.Min,
+      MB.ChunksRange.Max,
+      MB.Volume.Chunks,
+      chunksValueCallback,
+      chunksMinCallback,
+      chunksMaxCallback
+    ));
+  }
+
 
   private void AddResolution() {
     EventCallback<Vector3> resolutionValueCallback = delegate(Vector3 updated) { MB.Volume.Resolution   = updated; };

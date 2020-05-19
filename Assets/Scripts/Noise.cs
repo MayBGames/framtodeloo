@@ -11,7 +11,7 @@ public enum NoiseMethodType {
 
 public static class Noise {
 
-  public static int[] PermutationTable = {
+  public static readonly int[] PermutationTable = {
 		151,160,137, 91, 90, 15,131, 13,201, 95, 96, 53,194,233,  7,225,
 		140, 36,103, 30, 69,142,  8, 99, 37,240, 21, 10, 23,190,  6,148,
 		247,120,234, 75,  0, 26,197, 62, 94,252,219,203,117, 35, 11, 32,
@@ -75,7 +75,7 @@ public static class Noise {
 	
 	private const int gradientsMask3D = 15;
 
-	private static Vector3[] simplexGradients3D = {
+	private static readonly Vector3[] simplexGradients3D = {
 		new Vector3( 1f, 1f, 0f).normalized,
 		new Vector3(-1f, 1f, 0f).normalized,
 		new Vector3( 1f,-1f, 0f).normalized,
@@ -148,7 +148,7 @@ public static class Noise {
 	private static float squaresToTriangles = (3f - Mathf.Sqrt(3f)) / 6f;
 	private static float trianglesToSquares = (Mathf.Sqrt(3f) - 1f) / 2f;
 	private static float simplexScale2D = 2916f * sqr2 / 125f;
-	private static float simplexScale3D = 8192f * Mathf.Sqrt(3f) / 375f;
+	private static readonly float simplexScale3D = 8192f * Mathf.Sqrt(3f) / 375f;
 
   public static NoiseSample Value1D (Vector3 point, float frequency) {
     point *= frequency;

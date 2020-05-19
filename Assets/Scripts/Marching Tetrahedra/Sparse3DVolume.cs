@@ -1,65 +1,46 @@
 using System;
-using System.Collections.Generic;
 
 using UnityEngine;
 
+using Unity.Mathematics;
+using Unity.Collections;
+
 [Serializable]
-public class Sparse3DVolume {
-  private static int[][] geometryVertices = new int[][] {
-    new int[] {0, 1, 0, 2, 0, 3},
-    new int[] {1, 0, 1, 3, 1, 2},
-    new int[] {0, 3, 1, 2, 0, 2, 0, 3, 1, 3, 1, 2},
-    new int[] {2, 0, 2, 1, 2, 3},
-    new int[] {0, 1, 2, 3, 0, 3, 0, 1, 1, 2, 2, 3},
-    new int[] {0, 1, 1, 3, 2, 3, 0, 1, 2, 3, 0, 2},
-    new int[] {3, 0, 3, 1, 3, 2},
-    new int[] {3, 0, 3, 2, 3, 1},
-    new int[] {0, 1, 2, 3, 1, 3, 0, 1, 0, 2, 2, 3},
-    new int[] {0, 1, 0, 3, 2, 3, 0, 1, 2, 3, 1, 2},
-    new int[] {2, 0, 2, 3, 2, 1},
-    new int[] {0, 3, 0, 2, 1, 2, 0, 3, 1, 2, 1, 3},
-    new int[] {1, 0, 1, 2, 1, 3},
-    new int[] {0, 1, 0, 3, 0, 2}
-  };
-  private static int[][] sampleIndexes = new int[][] {
-    new int[] {0, 2, 3, 7},
-    new int[] {0, 2, 7, 6},
-    new int[] {0, 4, 6, 7},
-    new int[] {0, 6, 1, 2},
-    new int[] {0, 4, 1, 6},
-    new int[] {5, 6, 1, 4}
-  };
-  
-  public Vector3 Resolution;
-  public Vector3 Scale;
-  public Vector3 Offset;
+public struct Sparse3DVolume {  
+  public float3 Resolution;
+  public float3 Scale;
+  public float3 Offset;
   public float Min;
   public float Frequency;
-  
-  private List<Vector3> Vertices = new List<Vector3>();
-  private List<int> Triangles = new List<int>();
 
-  public Mesh SparseBuildMesh() {
-    Vertices.Clear();
-    Triangles.Clear();
+  public float3 Chunks;
 
+  public NativeArray<int> GeometryVertexes;
+  public NativeArray<int> IndexTracker;
+  public NativeArray<int> SampleIndexes;
+
+  public NativeArray<Vector3> Vertices;
+  public NativeArray<int> Triangles;
+
+  public NativeArray<Vector3> SimplexGradients3D;
+  public NativeArray<int> PermutationTable;
+
+  public int VertexCount;
+
+  private const int hashMask = 255;
+  private const int simplexGradientsMask3D = 31;
+  private static readonly float simplexScale3D = 8192f * Mathf.Sqrt(3f) / 375f;
+
+  public void SparseBuildMesh() {
+    VertexCount = 0;
+    
     for (float x = 0f; x < Resolution.x; x++)
       for (float y = 0f; y < Resolution.y; y++)
         for (float z = 0f; z < Resolution.z; z++)
-          GenerateSamplePoints(new Vector3(x, y, z));
-
-    Mesh mesh = new Mesh { name = $"Mesh" };
-
-    mesh.vertices  = Vertices.ToArray();
-    mesh.triangles = Triangles.ToArray();
-
-    mesh.Optimize();
-    mesh.RecalculateNormals();
-
-    return mesh;
+          GenerateSamplePoints(new float3(x, y, z));
   }
 
-  private void GenerateSamplePoints(Vector3 sample) {
+  private void GenerateSamplePoints(float3 sample) {
     float row    = sample.x + Offset.x;
     float column = sample.y + Offset.y;
     float isle   = sample.z + Offset.z;
@@ -68,80 +49,166 @@ public class Sparse3DVolume {
     float nextColumn = column + 1f;
     float nextIsle   = isle   + 1f;
 
-    Vector3[] points = new Vector3[] {
-      new Vector3(    row,     column, nextIsle),
-      new Vector3(nextRow,     column, nextIsle),
-      new Vector3(nextRow,     column,     isle),
-      new Vector3(    row,     column,     isle),
-      new Vector3(    row, nextColumn, nextIsle),
-      new Vector3(nextRow, nextColumn, nextIsle),
-      new Vector3(nextRow, nextColumn,     isle),
-      new Vector3(    row, nextColumn,     isle)
-    };
+    NativeArray<float3> points = new NativeArray<float3>(8, Allocator.Temp);
 
-    float[] values = new float[8];
+    points[0] = new float3(    row,     column, nextIsle);
+    points[1] = new float3(nextRow,     column, nextIsle);
+    points[2] = new float3(nextRow,     column,     isle);
+    points[3] = new float3(    row,     column,     isle);
+    points[4] = new float3(    row, nextColumn, nextIsle);
+    points[5] = new float3(nextRow, nextColumn, nextIsle);
+    points[6] = new float3(nextRow, nextColumn,     isle);
+    points[7] = new float3(    row, nextColumn,     isle);
+
+    NativeArray<float> values = new NativeArray<float>(8, Allocator.Temp);
 
     for (int i = 0; i < 8; i++)
-      values[i] = Noise.SimplexGradient3D(
+      values[i] = SimplexGradient3D(
         points[i],
         Frequency
       ).value;
     
     Polygonize(points, values);
+
+    points.Dispose();
+    values.Dispose();
   }
 
-  public void Polygonize(Vector3[] points, float[] values) {
+  private void Polygonize(NativeArray<float3> points, NativeArray<float> values) {
     for (int s = 0; s < 6; s++) {
-      int mask = GenerateMask(sampleIndexes[s], values);
+      int mask = GenerateMask(s * 4, values);
 
       if (mask > 0 && mask < 15) {
-        int[] indexesToSample = sampleIndexes[s];
-
-        Vector3[] samplePoints = new Vector3[4];
-        float[]   sampleValues = new float[4];
+        NativeArray<float3> samplePoints = new NativeArray<float3>(4, Allocator.Temp);
+        NativeArray<float>  sampleValues = new NativeArray<float>(4, Allocator.Temp);
 
         for (int i = 0; i < 4; i ++) {
-          int sample = indexesToSample[i];
+          int sample = SampleIndexes[s * 4 + i];
           
           samplePoints[i] = points[sample];
           sampleValues[i] = values[sample];
         }
 
-        Geometry(samplePoints, sampleValues, geometryVertices[--mask]);
+        Geometry(samplePoints, sampleValues, mask - 1);
+
+        samplePoints.Dispose();
+        sampleValues.Dispose();
       }
     }
   }
 
-  private int GenerateMask(int[] keys, float[] v) {
+  private int GenerateMask(int startAt, NativeArray<float> v) {
     int mask = 0;
 
-    if (v[keys[0]] > Min) mask |= 1;
-    if (v[keys[1]] > Min) mask |= 2;
-    if (v[keys[2]] > Min) mask |= 4;
-    if (v[keys[3]] > Min) mask |= 8;
+    if (v[SampleIndexes[startAt    ]] > Min) mask |= 1;
+    if (v[SampleIndexes[startAt + 1]] > Min) mask |= 2;
+    if (v[SampleIndexes[startAt + 2]] > Min) mask |= 4;
+    if (v[SampleIndexes[startAt + 3]] > Min) mask |= 8;
 
     return mask;
   }
 
-  public void Geometry(Vector3[] positions, float[] values, int[] indexes) {
-    for (int i = 0; i < indexes.Length; ++i)
+  private void Geometry(NativeArray<float3> positions, NativeArray<float> values, int index) {
+    int startAt = IndexTracker[index * 2];
+
+    for (int i = 0; i < IndexTracker[index * 2 + 1];) {
+      int current = GeometryVertexes[startAt + i++];
+      int next    = GeometryVertexes[startAt + i++];
+      
       BuildVertex(
-        values   [indexes[  i    ]],
-        values   [indexes[  i + 1]],
-        positions[indexes[  i    ]],
-        positions[indexes[++i    ]]
+        values   [current],
+        values   [next   ],
+        positions[current],
+        positions[next   ]
       );
+    }
   }
 
-  public void BuildVertex(float v0, float v1, Vector3 p0, Vector3 p1) {
-    Vector3 p = p0 + (p1 - p0) / (v1 - v0) * (Min - v0);
+  private void BuildVertex(float v0, float v1, float3 p0, float3 p1) {
+    float3 p = p0 + (p1 - p0) / (v1 - v0) * (Min - v0);
 
     p.x *= Scale.x;
     p.y *= Scale.y;
     p.z *= Scale.z;
     
-    Vertices.Add(p);
-
-    Triangles.Add(Triangles.Count);
+    Vertices [VertexCount] = p;
+    Triangles[VertexCount] = VertexCount++;
   }
+
+  private NoiseSample SimplexGradient3D (Vector3 point, float frequency) {
+		point *= frequency;
+		
+		float skew = (point.x + point.y + point.z) * (1f / 3f);
+		float sx 	 = point.x + skew;
+		float sy   = point.y + skew;
+		float sz   = point.z + skew;
+		
+		int ix = Mathf.FloorToInt(sx);
+		int iy = Mathf.FloorToInt(sy);
+		int iz = Mathf.FloorToInt(sz);
+		
+		NoiseSample sample = SimplexGradient3DPart(point, ix, iy, iz);
+		
+		sample += SimplexGradient3DPart(point, ix + 1, iy + 1, iz + 1);
+
+		float x = sx - ix;
+		float y = sy - iy;
+		float z = sz - iz;
+		
+		if (x >= y) {
+			if (x >= z) {
+				sample += SimplexGradient3DPart(point, ix + 1, iy, iz);
+
+				if (y >= z)
+					sample += SimplexGradient3DPart(point, ix + 1, iy + 1, iz);
+				else
+					sample += SimplexGradient3DPart(point, ix + 1, iy, iz + 1);
+			} else {
+				sample += SimplexGradient3DPart(point, ix, iy, iz + 1);
+				sample += SimplexGradient3DPart(point, ix + 1, iy, iz + 1);
+			}
+		} else {
+			if (y >= z) {
+				sample += SimplexGradient3DPart(point, ix, iy + 1, iz);
+
+				if (x >= z)
+					sample += SimplexGradient3DPart(point, ix + 1, iy + 1, iz);
+				else
+					sample += SimplexGradient3DPart(point, ix, iy + 1, iz + 1);
+			} else {
+				sample += SimplexGradient3DPart(point, ix, iy, iz + 1);
+
+				sample += SimplexGradient3DPart(point, ix, iy + 1, iz + 1);
+			}
+		}
+		
+		return sample * simplexScale3D;
+	}
+
+  private NoiseSample SimplexGradient3DPart (Vector3 point, int ix, int iy, int iz) {
+		float unskew = (ix + iy + iz) * (1f / 6f);
+		float x 		 = point.x - ix + unskew;
+		float y 		 = point.y - iy + unskew;
+		float z 		 = point.z - iz + unskew;
+		float f 		 = 0.5f - x * x - y * y - z * z;
+		
+		NoiseSample sample = new NoiseSample();
+		
+		if (f > 0f) {
+			float f2 = f * f;
+			float f3 = f * f2;
+			
+			Vector3 g = SimplexGradients3D[PermutationTable[PermutationTable[PermutationTable[ix & hashMask] + iy & hashMask] + iz & hashMask] & simplexGradientsMask3D];
+
+			float v = Dot(g, x, y, z);
+
+			sample.value = v * f3;
+		}
+		
+		return sample;
+	}
+
+  private static float Dot (Vector3 g, float x, float y, float z) {
+		return g.x * x + g.y * y + g.z * z;
+	}
 }
